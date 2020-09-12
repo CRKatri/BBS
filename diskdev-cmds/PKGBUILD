@@ -28,51 +28,52 @@ shopt -s extglob
 prepare() {
   cd "$_pkgname-$pkgver"
 
-  mkdir -p include/{arm,machine,{System/,}sys,uuid}
-  cp -a ${MACOSX_SYSROOT}/usr/include/sys/{disk,reboot,vnioctl,vmmeter}.h ${MACOSX_SYSROOT}/System/Library/Frameworks/Kernel.framework/Versions/Current/Headers/sys/disklabel.h include/sys
-  cp -a ${BBS_BASE}/usr/include/{unistd,stdlib}.h include/
+  #mkdir -p include/{arm,machine,{System/,}sys,System/uuid}
+  #cp -a ${MACOSX_SYSROOT}/usr/include/sys/{disk,reboot,vnioctl,vmmeter}.h ${MACOSX_SYSROOT}/System/Library/Frameworks/Kernel.framework/Versions/Current/Headers/sys/disklabel.h include/sys
+  #cp -a ${BBS_BASE}/usr/include/{unistd,stdlib}.h include/
 
-  cp -a $srcdir/{mntopts,nlist}.h include/
-  cp -a $srcdir/disklabel.h include/arm/
-  cp -a $srcdir/disklabel-machine.h include/machine/disklabel.h
-  cp -a $srcdir/vnode.h include/sys
-  cp -a $srcdir/fsctl.h include/System/sys
-  cp -a $srcdir/namespace.h include/System/uuid
+  #cp -a $srcdir/{mntopts,nlist}.h include/
+  #cp -a $srcdir/disklabel.h include/arm/
+  #cp -a $srcdir/disklabel-machine.h include/machine/disklabel.h
+  #cp -a $srcdir/vnode.h include/sys
+  #cp -a $srcdir/fsctl.h include/System/sys
+  #cp -a $srcdir/namespace.h include/System/uuid
 }
 
 build() {
-  cd "$_pkgname-$pkgver"
+  echo "I can't get this to work"
+  #cd "$_pkgname-$pkgver"
 
-  cd disklib
-  rm -f mntopts.h getmntopts.c
-  for arch in ${ARCHES}; do
-    for c in *.c; do 
-      ${CC} -arch ${arch} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -fno-common -o $(basename ${c} .c)-${arch}.o -c ${c}
-    done
-    ${AR} -r libdisk-${arch}.a *-${arch}.o
-    LIBDISKA=$(echo disklib/libdisk-${arch}.a ${LIBDISKA})
-  done
-  cd ..
-  for tproj in !(fstyp|fsck_hfs|fuser|mount_portal|mount_swapfs|mount_umap|newfs_hfs_debug).tproj; do
-    tproj=$(basename ${tproj} .tproj)
-    echo ${tproj}
-    extra=""
-    if [[ ${tproj} = restore ]]; then
-      extra="${extra} -DRRESTORE"
-    fi
-    if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs ]]; then
-      extra="${extra} -framework IOKit"
-    fi
-    if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs || ${tproj} = newfs_hfs ]]; then
-      extra="${extra} -framework CoreFoundation"
-    fi
-    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem include -DTARGET_OS_SIMULATOR -Idisklib -o $tproj $(find "$tproj.tproj" -name '*.c') ${LIBDISKA} -lutil $extra
-  done
-  cd fstyp.tproj
-  for c in *.c; do
-    bin=../$(basename ${c} .c)
-    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -o ${bin} ${c}
-  done
+  #cd disklib
+  #rm -f mntopts.h getmntopts.c
+  #for arch in ${ARCHES}; do
+  #  for c in *.c; do 
+  #    ${CC} -arch ${arch} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -fno-common -o $(basename ${c} .c)-${arch}.o -c ${c}
+  #  done
+  #  ${AR} -r libdisk-${arch}.a *-${arch}.o
+  #  LIBDISKA=$(echo disklib/libdisk-${arch}.a ${LIBDISKA})
+  #done
+  #cd ..
+  #for tproj in !(fstyp|fsck_hfs|fuser|mount_portal|mount_swapfs|mount_umap|newfs_hfs_debug).tproj; do
+  #  tproj=$(basename ${tproj} .tproj)
+  #  echo ${tproj}
+  #  extra=""
+  #  if [[ ${tproj} = restore ]]; then
+  #    extra="${extra} -DRRESTORE"
+  #  fi
+  #  if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs ]]; then
+  #    extra="${extra} -framework IOKit"
+  #  fi
+  #  if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs || ${tproj} = newfs_hfs ]]; then
+  #    extra="${extra} -framework CoreFoundation"
+  #  fi
+  #  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem include -DTARGET_OS_SIMULATOR -Idisklib -o $tproj $(find "$tproj.tproj" -name '*.c') ${LIBDISKA} -lutil $extra
+  #done
+  #cd fstyp.tproj
+  #for c in *.c; do
+  #  bin=../$(basename ${c} .c)
+  #  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -o ${bin} ${c}
+  #done
 }
 
 package() {
