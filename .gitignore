@@ -1,2 +1,12 @@
 BBS_BASE
 BBS_OUT
+*.tar*
+*/pkg
+*/src
+diskdev-cmds/disklabel-machine.h
+diskdev-cmds/disklabel.h
+diskdev-cmds/fsctl.h
+diskdev-cmds/mntopts.h
+diskdev-cmds/namespace.h
+diskdev-cmds/nlist.h
+diskdev-cmds/vnode.h
