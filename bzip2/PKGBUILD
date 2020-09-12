@@ -1,4 +1,4 @@
-# Maintainer: katri.cameron@gmail.com
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
 
 pkgname=bzip2
 pkgver=1.0.8
@@ -33,4 +33,7 @@ package() {
   for bin in $pkgdir/usr/bin/*; do
     ln -s ../usr/bin/$(basename ${bin}) $pkgdir/bin/$(basename ${bin})
   done
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
 }

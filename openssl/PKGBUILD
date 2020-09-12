@@ -1,0 +1,47 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=openssl
+_ver=1.1.1g
+# use a pacman compatible version scheme
+pkgver=${_ver/[a-z]/.${_ver//[0-9.]/}}
+pkgrel=1
+pkgdesc='The Open Source toolkit for Secure Sockets Layer and Transport Layer Security'
+arch=('arm64')
+url='https://www.openssl.org'
+license=('custom:BSD')
+optdepends=('ca-certificates')
+backup=('etc/ssl/openssl.cnf')
+source=("https://www.openssl.org/source/${pkgname}-${_ver}.tar.gz"{,.asc})
+sha256sums=('ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46'
+            'SKIP' )
+validpgpkeys=('8657ABB260F056B1E5190839D9C4D26D0E604491'
+              '7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C')
+
+prepare() {
+	cd "$srcdir/$pkgname-$_ver"
+  
+  touch Configurations/15-BBS.conf
+  echo -e 'my %targets = (\n  "aarch64-apple-darwin" => {\n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CC               => "${CC}",\n    cflags           => add("-O2 -fomit-frame-pointer -fno-common"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG RC4_CHAR",\n    perlasm_scheme   => "ios64",\n    sys_id           => "${PLATFORM}",\n  },\n  "arm-apple-darwin" => {\n    inherit_from     => [ "darwin-common", asm("armv4_asm") ],\n    CC               => "${CC}",\n    cflags           => add("-O2 -fomit-frame-pointer -fno-common"),\n    perlasm_scheme   => "ios32",\n    sys_id           => "${PLATFORM}",\n  },\n);' > Configurations/15-BBS.conf
+}
+
+build() {
+	cd "$srcdir/$pkgname-$_ver"
+
+  ./Configure \
+    --prefix=/usr \
+    --openssldir=/etc/ssl \
+    shared \
+    aarch64-apple-darwin
+
+  make
+}
+
+package() {
+	cd "$srcdir/$pkgname-$_ver"
+	make DESTDIR=$pkgdir MANDIR=/usr/share/man MANSUFFIX=ssl install_sw install_ssldirs install_man_docs
+	make DESTDIR=${BBS_BASE} install_sw 
+	install -D -m644 LICENSE $pkgdir/usr/share/licenses/$pkgname/LICENSE
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

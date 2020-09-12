@@ -1,0 +1,94 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=diskdev-cmds
+_pkgname=diskdev_cmds
+pkgver=593.230.1
+pkgrel=1
+pkgdesc="mount, quota, fsck, fstyp, fdisk, tunefs"
+arch=('arm64')
+source=("https://opensource.apple.com/tarballs/$_pkgname/$_pkgname-$pkgver.tar.gz"
+        "https://opensource.apple.com/source/libutil/libutil-57/mntopts.h"
+        "https://opensource.apple.com/source/xnu/xnu-6153.11.26/EXTERNAL_HEADERS/mach-o/nlist.h"
+        "https://opensource.apple.com/source/xnu/xnu-6153.11.26/bsd/arm/disklabel.h"
+        "disklabel-machine.h::https://opensource.apple.com/source/xnu/xnu-6153.11.26/bsd/machine/disklabel.h"
+        "https://opensource.apple.com/source/xnu/xnu-6153.11.26/bsd/sys/vnode.h"
+        "https://opensource.apple.com/source/xnu/xnu-6153.11.26/bsd/sys/fsctl.h"
+        "https://opensource.apple.com/source/Libc/Libc-1353.11.2/uuid/namespace.h")
+sha1sums=('0949c61b497581dd51710a7402764e055c649d42'
+          '46f72f2318c5b067b466a659e7423e9ed91d213b'
+          '75b8c7fc6b1322eb968b81fedb3b121144162ad9'
+          '2469cab47d4157985c0b8ef9f843ccf783c389b2'
+          'e4e06c961f4631f262c52153fa4b1eb6b5c523cf'
+          '5e58d1a9dd0da8efca01daa055a1d9e1c95f2e85'
+          '95e73825708d534b686831d8e25f23aad86e85d2'
+          '64d56edc33efe78828f13a8806a89793bd49bc4f')
+
+shopt -s extglob
+
+prepare() {
+  cd "$_pkgname-$pkgver"
+
+  mkdir -p include/{arm,machine,{System/,}sys,uuid}
+  cp -a ${MACOSX_SYSROOT}/usr/include/sys/{disk,reboot,vnioctl,vmmeter}.h ${MACOSX_SYSROOT}/System/Library/Frameworks/Kernel.framework/Versions/Current/Headers/sys/disklabel.h include/sys
+  cp -a ${BBS_BASE}/usr/include/{unistd,stdlib}.h include/
+
+  cp -a $srcdir/{mntopts,nlist}.h include/
+  cp -a $srcdir/disklabel.h include/arm/
+  cp -a $srcdir/disklabel-machine.h include/machine/disklabel.h
+  cp -a $srcdir/vnode.h include/sys
+  cp -a $srcdir/fsctl.h include/System/sys
+  cp -a $srcdir/namespace.h include/System/uuid
+}
+
+build() {
+  cd "$_pkgname-$pkgver"
+
+  cd disklib
+  rm -f mntopts.h getmntopts.c
+  for arch in ${ARCHES}; do
+    for c in *.c; do 
+      ${CC} -arch ${arch} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -fno-common -o $(basename ${c} .c)-${arch}.o -c ${c}
+    done
+    ${AR} -r libdisk-${arch}.a *-${arch}.o
+    LIBDISKA=$(echo disklib/libdisk-${arch}.a ${LIBDISKA})
+  done
+  cd ..
+  for tproj in !(fstyp|fsck_hfs|fuser|mount_portal|mount_swapfs|mount_umap|newfs_hfs_debug).tproj; do
+    tproj=$(basename ${tproj} .tproj)
+    echo ${tproj}
+    extra=""
+    if [[ ${tproj} = restore ]]; then
+      extra="${extra} -DRRESTORE"
+    fi
+    if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs ]]; then
+      extra="${extra} -framework IOKit"
+    fi
+    if [[ ${tproj} = mount_cd9660 || ${tproj} = mount_hfs || ${tproj} = newfs_hfs ]]; then
+      extra="${extra} -framework CoreFoundation"
+    fi
+    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem include -DTARGET_OS_SIMULATOR -Idisklib -o $tproj $(find "$tproj.tproj" -name '*.c') ${LIBDISKA} -lutil $extra
+  done
+  cd fstyp.tproj
+  for c in *.c; do
+    bin=../$(basename ${c} .c)
+    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem ../include -o ${bin} ${c}
+  done
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  mkdir -p $pkgdir/{usr/{{s,}bin,libexec},sbin}
+  cp -a quota $pkgdir/usr/bin
+  cp -a dev_mkdb edquota fdisk quotaon repquota vsdbutil $pkgdir/usr/sbin
+  cp -a vndevice $pkgdir/usr/libexec
+  cp -a quotacheck umount @(fstyp|newfs)?(_*([a-z0-9])) @(mount_*([a-z0-9])) $pkgdir/sbin
+
+  chmod u+s $pkgdir/usr/bin/quota $pkgdir/sbin/umount
+
+  if [[ "${BBS_CFVER}" -ge 1600 ]]; then
+    rm $pkgdir/sbin/umount
+  fi
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}

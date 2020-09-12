@@ -1,0 +1,33 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=libidn2
+pkgver=2.3.0
+pkgrel=1
+pkgdesc="Free software implementation of IDNA2008, Punycode and TR46"
+arch=(arm64)
+url="https://www.gnu.org/software/libidn/#libidn2"
+license=('GPL2' 'LGPL3')
+depends=('libunistring' 'gettext')
+provides=('libidn2.dylib')
+source=(https://ftp.gnu.org/gnu/libidn/$pkgname-$pkgver.tar.gz{,.sig})
+sha256sums=('e1cb1db3d2e249a6a3eb6f0946777c2e892d5c5dc7bd91c74394fc3a01cab8b5'
+            'SKIP')
+validpgpkeys=('1CB27DBC98614B2D5841646D08302DB6A2670428')
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE}
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

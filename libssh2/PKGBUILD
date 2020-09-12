@@ -1,0 +1,38 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=libssh2
+pkgver=1.9.0
+pkgrel=1
+pkgdesc="A library implementing the SSH2 protocol as defined by Internet Drafts"
+url="https://www.libssh2.org/"
+arch=('arm64')
+license=('BSD')
+depends=('openssl')
+provides=('libssh2.dylib')
+validpgpkeys=('27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2')
+source=("https://www.libssh2.org/download/$pkgname-$pkgver.tar.gz"{,.asc})
+md5sums=('1beefafe8963982adc84b408b2959927'
+         'SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  ./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE} \
+    --disable-debug \
+    --disable-dependency-tracking \
+    --with-libz
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

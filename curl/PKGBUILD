@@ -1,0 +1,43 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=curl
+pkgver=7.72.0
+pkgrel=1
+pkgdesc="An URL retrieval utility and library"
+arch=('arm64')
+url="https://curl.haxx.se"
+license=('MIT')
+depends=('ca-certificates' 'libssh2' 'openssl' 'nghttp2' 'libidn2')
+provides=('libcurl.dylib')
+source=("https://curl.haxx.se/download/$pkgname-$pkgver.tar.gz"{,.asc})
+sha512sums=('f1946394595baa2b2889c4fed5e8745036cecfe9c425010c41fbc4baa71ffd7ff3e78289dd7ee14f0c74c482056838e5408d63f9ee9ee06c31ed920282f08507'
+            'SKIP')
+validpgpkeys=('27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2') # Daniel Stenberg
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-debug \
+    --disable-dependency-tracking \
+    --with-nghttp2 \
+    --with-libssh2 \
+    --with-ca-bundle=/etc/ssl/certs/cacert.pem
+
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  # license
+  install -Dt "$pkgdir/usr/share/licenses/$pkgname" -m644 COPYING
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}

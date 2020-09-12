@@ -1,0 +1,26 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=ca-certificates
+pkgver=0.0.3
+pkgrel=1
+pkgdesc="CA certs for curl, wget, git."
+arch=(any)
+license=(Unlicense)
+source=('mk-ca-bundle.pl')
+sha256sums=('0b556ed71190a6086630351967b401395a0dd0fa769faf1d0f28e17f0de7eec1')
+
+build() {
+  $srcdir/mk-ca-bundle.pl
+  echo -e "## git ##\ngit config --global http.sslCAInfo /etc/ssl/certs/cacert.pem &> /dev/null" > cacerts.bootstrap.sh
+}
+
+package() {
+  mkdir -p $pkgdir/etc/{profile.d,ssl/certs}
+  mkdir -p $pkgdir/usr/lib/ssl
+  cp cacerts.bootstrap.sh $pkgdir/etc/profile.d
+  cp ca-bundle.crt $pkgdir/etc/ssl/certs/cacert.pem
+  ln -s certs/cacerts.pem $pkgdir/etc/ssl/cert.pem
+  ln -s /etc/ssl/certs $pkgdir/usr/lib/ssl
+  ln -s /etc/ssl/certs/cacert.pem $pkgdir/usr/lib/ssl
+  chmod a+x $pkgdir/etc/profile.d/cacerts.bootstrap.sh
+}

@@ -1,0 +1,31 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=libunistring
+pkgver=0.9.10
+pkgrel=1
+pkgdesc='Library for manipulating Unicode strings and C strings'
+url='https://www.gnu.org/software/libunistring/'
+arch=(arm64)
+license=(GPL)
+provides=('libunistring.dylib')
+source=(https://ftp.gnu.org/gnu/$pkgname/${pkgname}-${pkgver}.tar.xz{,.sig})
+validpgpkeys=('462225C3B46F34879FC8496CD605848ED7E69871') # Daiki Ueno <ueno@unixuser.org>
+md5sums=('db08bb384e81968957f997ec9808926e'
+         'SKIP')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE}
+
+  make
+}
+
+package() {
+  make -C $pkgname-$pkgver DESTDIR="$pkgdir" install
+  make -C $pkgname-$pkgver DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

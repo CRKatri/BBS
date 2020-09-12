@@ -1,0 +1,42 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=nghttp2
+pkgver=1.41.0
+pkgrel=1
+pkgdesc='Framing layer of HTTP/2 is implemented as a reusable C library'
+arch=(arm64)
+url='https://nghttp2.org/'
+license=(MIT)
+options=(!emptydirs)
+source=(https://github.com/nghttp2/nghttp2/releases/download/v$pkgver/nghttp2-$pkgver.tar.xz)
+backup=(
+  etc/nghttpx/nghttpx.conf
+  etc/logrotate.d/nghttpx
+)
+sha512sums=('c92e8022ccc876fa311f21bc5bf5af75feff8232efb56a4b2ab198031e974d15b67c16c046188cc76552f75a1b2e7115925d6ce1e42d6f94ae482fe69727466d')
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking \
+    --enable-lib-only
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  install -Dm644 contrib/nghttpx.service "$pkgdir/usr/lib/systemd/system/nghttpx.service"
+  install -Dm644 contrib/nghttpx-logrotate "$pkgdir/etc/logrotate.d/nghttpx"
+  install -Dm644 nghttpx.conf.sample "$pkgdir/etc/nghttpx/nghttpx.conf"
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/nghttp2/COPYING"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
