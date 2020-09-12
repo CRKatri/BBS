@@ -1,0 +1,32 @@
+# Contributor: Tobias Powalowski <tpowa@archlinux.org>
+
+pkgname=libassuan
+pkgver=2.5.3
+pkgrel=1
+pkgdesc='IPC library used by some GnuPG related software'
+url='https://www.gnupg.org/related_software/libassuan/'
+arch=('arm64')
+license=('GPL')
+depends=('libgpg-error')
+validpgpkeys=('031EC2536E580D8EA286A9F22071B08A33BD3F06') # NIIBE Yutaka
+source=("https://gnupg.org/ftp/gcrypt/${pkgname}/${pkgname}-${pkgver}.tar.bz2"{,.sig})
+sha256sums=('91bcb0403866b4e7c4bc1cc52ed4c364a9b5414b3994f718c70303f7f765e702'
+            'SKIP')
+
+build() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE} \
+    --with-gpg-error-prefix=${BBS_BASE}/usr
+	make
+}
+
+package() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	make DESTDIR="${pkgdir}" install
+	make DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

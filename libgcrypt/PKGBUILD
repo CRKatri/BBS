@@ -1,0 +1,50 @@
+# Maintainer: Andreas Radke <andyrtr@archlinux.org>
+
+# after a .so bump first rebuild dirmngr
+# with sudo testing-x86_64-build -- -I libgcrypt-1.6.0-1-x86_64.pkg.tar.xz
+# then cp /usr/lib/libgcrypt.so.11 /var/lib/archbuild/staging-x86_64/root/usr/lib/ and do staging-x86_64-build
+
+pkgname=libgcrypt
+pkgver=1.8.6
+pkgrel=1
+pkgdesc="General purpose cryptographic library based on the code from GnuPG"
+arch=(arm64)
+url="https://www.gnupg.org"
+license=('LGPL')
+depends=('libgpg-error')
+options=('!emptydirs')
+# https://www.gnupg.org/download/integrity_check.html
+source=(https://gnupg.org/ftp/gcrypt/${pkgname}/${pkgname}-${pkgver}.tar.bz2{,.sig})
+sha1sums=('406b02873833427898d16bcc8483bc5c91c73d4a'
+          'SKIP')
+validpgpkeys=('031EC2536E580D8EA286A9F22071B08A33BD3F06'
+              'D8692123C4065DEA5E0F3AB5249B39D24F25E3B6')
+options=(!makeflags)
+
+prepare() {
+  cd "${pkgname}"-${pkgver}
+  
+  for ASM in mpi/aarch64/*.S; do
+    sed -i '/.type/d' $ASM
+    sed -i '/.size/d' $ASM
+    sed -i 's/_gcry/__gcry/g' $ASM
+  done
+}
+
+build() {
+  cd "${pkgname}"-${pkgver}
+  ./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE} \
+    --with-gpg-error-prefix=${BBS_BASE}/usr
+  make
+}
+
+package() {
+  cd "${pkgname}"-${pkgver}
+  make DESTDIR="${pkgdir}" install
+  make DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
