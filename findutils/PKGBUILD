@@ -1,0 +1,34 @@
+# Maintainer:
+
+pkgname=findutils
+pkgver=4.7.0
+pkgrel=1
+pkgdesc="GNU utilities to locate files"
+arch=('arm64')
+license=('GPL3')
+groups=('base-devel')
+depends=('gettext' 'sh')
+url='https://www.gnu.org/software/findutils/'
+source=("https://ftp.gnu.org/pub/gnu/findutils/${pkgname}-${pkgver}.tar.xz"{,.sig})
+sha1sums=('bd2fae4add80334173e03272aeed5635d4a0fa03'
+          'SKIP')
+validpgpkeys=('A5189DB69C1164D33002936646502EF796917195') # Bernhard Voelker <mail@bernhard-voelker.de>
+
+build() {
+  cd ${pkgname}-${pkgver}
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking \
+    --disable-debug
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="$pkgdir" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
