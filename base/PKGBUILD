@@ -1,0 +1,24 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=base
+pkgver=1
+pkgrel=1
+pkgdesc="Base filesystem"
+arch=(any)
+license=(Unlicense)
+
+package() {
+  mkdir -p $pkgdir/{Applications,bin,boot,dev,etc/{default,profile.d},lib,Library/{Frameworks,LaunchAgents,LaunchDaemons,Preferences,Ringtones,Wallpaper},mnt,sbin,System/Library/{Extensions,Fonts,Frameworks,Internet\ Plug-Ins,KeyboardDictionaries,LaunchDaemons,PreferenceBundles,PrivateFrameworks,SystemConfiguration,VideoDecoders},tmp,usr/{bin,games,include,sbin,share/{dict,misc}},var/{backups,cache,db,empty,lib/misc,local,lock,log,logs,mobile/{Library/Preferences,Media},msgs,preferences,root/Media,run,spool,tmp,vm}}
+  touch $pkgdir/var/run/utmp
+
+  chown 0:80 $pkgdir/{Applications,Library/{,Frameworks,Preferences,Ringtones,Wallpaper},etc,tmp,var/{,db}}
+  chown 0:3 $pkgdir/var/empty
+  chown 0:20 $pkdir/var/local
+  chown 0:1 $pkgdir/var/run
+  chown -R 501:501 $pkgdir/var/mobile
+  chmod 0775 $pkgdir/{Applications,Library,var/run}
+  chmod 2775 $pkgdir/var/local
+  chmod 1775 $pkgdir/var/{lock,tmp}
+  chmod 0775 $pkgdir/var/root
+  chmod 0644 $pkgdir/var/run/utmp
+}

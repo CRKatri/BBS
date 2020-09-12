@@ -1,0 +1,36 @@
+# Maintainer: katri.cameron@gmail.com
+
+pkgname=bzip2
+pkgver=1.0.8
+pkgrel=1
+pkgdesc="A high-quality data compression program"
+arch=('arm64')
+license=('custom')
+url="https://sourceware.org/bzip2/"
+source=(https://sourceware.org/pub/bzip2/$pkgname-$pkgver.tar.gz{,.sig})
+sha256sums=('ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269'
+            'SKIP')
+validpgpkeys=('EC3CFE88F6CA0788774F5C1D1AA44BE649DE760A') # Mark Wielaard <mark@klomp.org>
+
+build() {
+  cd $pkgname-$pkgver
+
+  make bzip2 \
+    CC=${CC} \
+    AR=${AR} \
+    RANLIB=${RANLIB} \
+    CFLAGS="${CFLAGS}"
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make install \
+    PREFIX="$pkgdir"/usr
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/${pkgname}/LICENSE
+
+  cd $pkdir/usr/bin
+  mkdir $pkgdir/bin
+  for bin in $pkgdir/usr/bin/*; do
+    ln -s ../usr/bin/$(basename ${bin}) $pkgdir/bin/$(basename ${bin})
+  done
+}
