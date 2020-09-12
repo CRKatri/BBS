@@ -1,0 +1,66 @@
+# Maintainer:  Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: judd <jvinet@zeroflux.org>
+
+pkgname=readline
+_basever=8.0
+_patchlevel=004
+pkgver=${_basever}.${_patchlevel}
+pkgrel=1
+pkgdesc='GNU readline library'
+arch=('arm64')
+url='https://tiswww.case.edu/php/chet/readline/rltop.html'
+license=('GPL')
+depends=('ncurses' 'libncursesw.dylib')
+provides=('libhistory.dylib' 'libreadline.dylib')
+options=('!emptydirs')
+source=(https://ftp.gnu.org/gnu/readline/readline-$_basever.tar.gz{,.sig})
+validpgpkeys=('7C0135FB088AAF6C66C650B9BB5869F064EA74AB') # Chet Ramey
+
+if [ $_patchlevel -gt 0 ]; then
+    for (( _p=1; _p <= $((10#${_patchlevel})); _p++ )); do
+        source=(${source[@]} https://ftp.gnu.org/gnu/readline/readline-$_basever-patches/readline${_basever//.}-$(printf "%03d" $_p){,.sig})
+    done
+fi
+
+prepare() {
+  cd $pkgname-$_basever
+  for (( _p=1; _p <= $((10#${_patchlevel})); _p++ )); do
+    msg "applying patch readline${_basever//.}-$(printf "%03d" $_p)"
+    patch -p0 -i ../readline${_basever//.}-$(printf "%03d" $_p)
+  done
+}
+
+build() {
+  cd $pkgname-$_basever
+
+  ./configure \
+    --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE} \
+    ac_cv_type_sig_atomic_t=no \
+    LDFLAGS="${CFLAGS} ${LDFLAGS}"
+
+  make \
+    SHLIB_LIBS="-lncursesw" \
+    TERMCAP_LIBS="-lncursesw"
+}
+
+package() {
+  cd $pkgname-$_basever 
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+md5sums=('7e6c1f16aee3244a69aba6e438295ca3'
+         'SKIP'
+         'c3e27b8a0d8e37a4172654e5f3ef2eec'
+         'SKIP'
+         '2e631f1973dfe4b0ef042c40b8fdb47e'
+         'SKIP'
+         '9d2344b399237fa7abdbcf966b364c97'
+         'SKIP'
+         '0c0406762a9afcd34c6a77268fea0ccb'
+         'SKIP')

@@ -1,0 +1,118 @@
+# Maintainer:  Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: Aaron Griffin <aaron@archlinux.org>
+
+pkgname=bash
+_basever=5.0
+_patchlevel=018
+pkgver=${_basever}.${_patchlevel}
+pkgrel=1
+pkgdesc='The GNU Bourne Again shell'
+arch=(arm64)
+license=(GPL)
+url='https://www.gnu.org/software/bash/bash.html'
+depends=('readline>=7.0' ncurses)
+provides=('sh')
+source=(https://ftp.gnu.org/gnu/bash/bash-$_basever.tar.gz{,.sig})
+validpgpkeys=('7C0135FB088AAF6C66C650B9BB5869F064EA74AB') # Chet Ramey
+
+if [[ $((10#${_patchlevel})) -gt 0 ]]; then
+  for (( _p=1; _p<=$((10#${_patchlevel})); _p++ )); do
+    source=(${source[@]} https://ftp.gnu.org/gnu/bash/bash-$_basever-patches/bash${_basever//.}-$(printf "%03d" $_p){,.sig})
+  done
+fi
+
+prepare() {
+  cd $pkgname-$_basever
+
+  for (( _p=1; _p<=$((10#${_patchlevel})); _p++ )); do
+    msg "applying patch bash${_basever//.}-$(printf "%03d" $_p)"
+    patch -p0 -i ../bash${_basever//.}-$(printf "%03d" $_p)
+  done
+
+  sed -i 's/ENOEXEC)/ENOEXEC \&\& i != EPERM)/' execute_cmd.c
+}
+
+build() {
+  cd $pkgname-$_basever
+
+  CFLAGS="${CFLAGS} -DSSH_SOURCE_BASHRC"
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-nls \
+    --with-installed-readline=${BBS_BASE}/usr/lib \
+    ac_cv_c_stack_direction=-1 \
+    ac_cv_func_mmap_fixed_mapped=yes \
+    ac_cv_func_setvbuf_reversed=no \
+    ac_cv_func_strcoll_works=yes \
+    ac_cv_func_working_mktime=yes \
+    ac_cv_prog_cc_g=no \
+    ac_cv_rl_version=8.0 \
+    ac_cv_type_getgroups=gid_t \
+    bash_cv_dev_fd=absent \
+    bash_cv_dup2_broken=no \
+    bash_cv_func_ctype_nonascii=no \
+    bash_cv_func_sigsetjmp=present \
+    bash_cv_func_strcoll_broken=yes \
+    bash_cv_job_control_missing=present \
+    bash_cv_must_reinstall_sighandlers=no \
+    bash_cv_sys_named_pipes=present \
+    bash_cv_sys_siglist=yes \
+    gt_cv_int_divbyzero_sigfpe=no \
+    ac_cv_sys_interpreter=no
+
+  make \
+    TERMCAP_LIB=-lncursesw
+}
+
+package() {
+  mkdir "$pkgdir/bin"
+  make -C $pkgname-$_basever DESTDIR="$pkgdir" install
+  ln -s ../usr/bin/bash "$pkgdir/bin/bash"
+  ln -s ../usr/bin/bash "$pkgdir/bin/sh"
+  ln -s bash "$pkgdir/usr/bin/sh"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+md5sums=('2b44b47b905be16f45709648f671820b'
+         'SKIP'
+         'b026862ab596a5883bb4f0d1077a3819'
+         'SKIP'
+         '2f4a7787365790ae57f36b311701ea7e'
+         'SKIP'
+         'af7f2dd93fd5429fb5e9a642ff74f87d'
+         'SKIP'
+         'b60545b273bfa4e00a760f2c648bed9c'
+         'SKIP'
+         '875a0bedf48b74e453e3997c84b5d8a4'
+         'SKIP'
+         '4a8ee95adb72c3aba03d9e8c9f96ece6'
+         'SKIP'
+         '411560d81fde2dc5b17b83c3f3b58c6f'
+         'SKIP'
+         'dd7cf7a784d1838822cad8d419315991'
+         'SKIP'
+         'c1b3e937cd6dccbb7fd772f32812a0da'
+         'SKIP'
+         '19b41e73b03602d0e261c471b53e670c'
+         'SKIP'
+         '414339330a3634137081a97f2c8615a8'
+         'SKIP'
+         '1870268f62b907221b078ad109e1fa94'
+         'SKIP'
+         '40d923af4b952b01983ed4c889ae2653'
+         'SKIP'
+         '57857b22053c8167677e5e5ac5c6669b'
+         'SKIP'
+         'c4c6ea23d09a74eaa9385438e48fdf02'
+         'SKIP'
+         'a682ed6fa2c2e7a7c3ba6bdeada07fb5'
+         'SKIP'
+         'd9dcaa1d8e7a24850449a1aac43a12a9'
+         'SKIP'
+         'a64d950d5de72ae590455b13e6afefcb'
+         'SKIP')
