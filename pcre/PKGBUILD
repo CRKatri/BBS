@@ -1,0 +1,44 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=pcre
+pkgver=8.44
+pkgrel=1
+pkgdesc='A library that implements Perl 5-style regular expressions'
+arch=('arm64')
+url='https://www.pcre.org/'
+license=('BSD')
+depends=('readline' 'bzip2' 'bash')
+validpgpkeys=('45F68D54BBE23FB3039B46E59766E084FB0F43D8') # Philip Hazel
+source=("https://ftp.pcre.org/pub/pcre/$pkgname-$pkgver.tar.bz2"{,.sig})
+sha512sums=('f26d850aab5228799e58ac8c2306fb313889332c39e29b118ef1de57677c5c90f970d68d3f475cabc64f8b982a77f04eca990ff1057f3ccf5e19bd137997c4ac'
+            'SKIP')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking \
+    --enable-utf8 \
+    --enable-pcre8 \
+    --enable-pcre16 \
+    --enable-pcre32 \
+    --enable-jit \
+    --enable-unicode-properties \
+    --enable-pcregrep-libz \
+    --enable-pcregrep-libbz2
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  install -Dm644 LICENCE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+# vim:set ts=2 sw=2 et:
