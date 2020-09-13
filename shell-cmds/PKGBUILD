@@ -1,0 +1,36 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=shell-cmds
+_pkgname=shell_cmds
+pkgver=207.40.1
+pkgrel=1
+pkgdesc="Base filesystem"
+arch=(arm64)
+license=(Unlicense)
+source=("https://opensource.apple.com/tarballs/shell_cmds/shell_cmds-$pkgver.tar.gz")
+md5sums=('b30a222185ea456404e6f9df575ff6e8')
+
+prepare() {
+  cd $_pkgname-$pkgver
+  mkdir -p include/sys
+  cp -a ${MACOSX_SYSROOT}/usr/include/sys/user.h include/sys
+  cp -a ${BBS_BASE}/usr/include/unistd.h include
+}
+
+build() {
+  cd $_pkgname-$pkgver
+  mkdir out
+  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o out/hexdump hexdump/{conv,display,hexdump,hexsyntax,odsyntax,parse}.c -D'__FBSDID(x)=' -D__DARWIN_C_LEVEL=200112L
+  for bin in killall renice script time which getopt what; do
+    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -isystem include -o out/${bin} $bin/*.c -D'__FBSDID(x)=' -save-temps
+  done
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  mkdir -p $pkgdir/usr/bin
+  cp out/* $pkgdir/usr/bin
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

@@ -1,0 +1,33 @@
+# Maintainer: Allan McRae <allan@archlinux.org>
+# Contributer: Jan de Groot <jgc@archlinux.org>
+
+pkgname=gmp
+pkgver=6.2.0
+pkgrel=1
+pkgdesc='A free library for arbitrary precision arithmetic'
+arch=(arm64)
+url='https://gmplib.org/'
+license=(LGPL3 GPL)
+source=(https://gmplib.org/download/gmp/gmp-$pkgver.tar.lz{,.sig})
+md5sums=('e3e08ac185842a882204ba3c37985127'
+         'SKIP')
+validpgpkeys=('343C2FF0FBEE5EC2EDBEF399F3599FF828C67298')   # Niels Möller
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-assembly
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="${pkgdir}" install
+  make DESTDIR="${BBS_BASE}" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

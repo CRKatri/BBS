@@ -1,0 +1,28 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=snaputil
+_pkgname=apfs
+pkgver=10.15.1
+pkgrel=1
+pkgdesc="APFS Snapshot Tool."
+arch=(arm64)
+license=(apache)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Diatrus/apfs/archive/v10.15.1.tar.gz"
+        "snaputil.xml")
+md5sums=('c4197e761bc5b58ca6623d8e9f6a2a6c'
+         '71dc05376ac672a894172cce0b06817c')
+
+build() {
+  cd $_pkgname-$pkgver
+  mkdir out
+  ${CC} ${ARCH} -Os -Wall -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o out/snaputil snapUtil.c
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  mkdir -p $pkgdir/usr/bin
+  cp out/snaputil $pkgdir/usr/bin
+
+  find $pkgdir -type f -exec ldid -S$srcdir/snaputil.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

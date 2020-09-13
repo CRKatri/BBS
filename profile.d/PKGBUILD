@@ -1,0 +1,21 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=profile.d
+pkgver=0
+pkgrel=5
+pkgdesc="makes packaging for /etc/profile reasonable"
+depends=('zsh')
+arch=(any)
+license=(Unlicense)
+install=profile.d.install
+source=('profile' 'zprofile' 'terminal.sh' 'profile.d.install')
+md5sums=('f0a0fb7c7b1b2fe93f5d660aeb56bbbe'
+         'e650d2785026b54c14d2492177ee9f15'
+         'c02bd8c282600bd918bc4b1c84198995'
+         'ef7cf25948ef13b720e31ea898bcad24')
+
+package() {
+  mkdir -p $pkgdir/etc/profile.d
+  cp ${BUILDDIR}/{,z}profile $pkgdir/etc
+  cp ${BUILDDIR}/terminal.sh $pkgdir/etc/profile.d
+}

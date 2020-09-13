@@ -27,6 +27,7 @@ build() {
     --enable-unicode-properties \
     --enable-pcregrep-libz \
     --enable-pcregrep-libbz2
+
   make
 }
 

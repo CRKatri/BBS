@@ -1,0 +1,51 @@
+# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: Tom Newsom <Jeepster@gmx.co.uk>
+
+pkgname=sudo
+_sudover=1.9.2
+pkgver=${_sudover/p/.p}
+pkgrel=1
+pkgdesc="Give certain users the ability to run some commands as root"
+arch=('arm64')
+url="https://www.sudo.ws/sudo/"
+license=('custom')
+depends=('gettext')
+backup=('etc/sudoers')
+source=("https://www.sudo.ws/sudo/dist/$pkgname-$_sudover.tar.gz"{,.sig}
+        "ios.diff")
+sha256sums=('7c98d201f181c47152711b9f391e0f6b5545f3ef8926298a3e8bc6288e118314'
+            'SKIP'
+            '4deb28b80b670664d32bdea81dc35c9e4fbaa34f88bc9b2c953c35ea67849a89')
+validpgpkeys=('59D1E9CCBA2B376704FDD35BA9F4C021CEA470FB')
+
+prepare() {
+  cd "$srcdir/$pkgname-$_sudover"
+  patch -p1 -i ../ios.diff
+}
+
+build() {
+  cd "$srcdir/$pkgname-$_sudover"
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --without-pam \
+    --with-env-editor \
+    sudo_cv___func__=yes
+  make
+}
+
+package() {
+  cd "$srcdir/$pkgname-$_sudover"
+  make DESTDIR="$pkgdir" INSTALL_OWNER='' install
+
+  install -Dm644 doc/LICENSE "$pkgdir/usr/share/licenses/sudo/LICENSE"
+
+  chmod u+s $pkgdir/usr/bin/sudo
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+# vim:set ts=2 sw=2 et:

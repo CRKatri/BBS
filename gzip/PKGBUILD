@@ -1,0 +1,39 @@
+# Mainainer: Sébastien "Seblu" Luttringer <seblu@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: judd <jvinet@zeroflux.org>
+
+pkgname=gzip
+pkgver=1.10
+pkgrel=1
+pkgdesc='GNU compression utility'
+arch=('arm64')
+url='https://www.gnu.org/software/gzip/'
+license=('GPL3')
+validpgpkeys=('155D3FC500C834486D1EEA677FD9FCCB000BEEEE') # Jim Meyering
+source=("https://ftp.gnu.org/pub/gnu/gzip/gzip-$pkgver.tar.xz"{,.sig})
+md5sums=('691b1221694c3394f1c537df4eee39d3'
+         'SKIP')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  mkdir $pkgdir/bin
+  make install DESTDIR="$pkgdir"
+
+  for bin in $pkgdir/usr/bin/*; do
+    ln -s ../usr/bin/$(basename ${bin}) $pkgdir/bin/$(basename ${bin})
+  done
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+# vim:set ts=2 sw=2 et:

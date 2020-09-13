@@ -19,16 +19,18 @@ sha256sums=('58e6751c41a7c25bfc6e9363a41786cff3ba5709cf11d5ad903cf7cce31cc3fb'
 
 build() {
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr --without-included-regex
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking \
+    --with-packager="Cameron Katri"
   make
-}
-
-check() {
-  cd $pkgname-$pkgver
-  make check
 }
 
 package() {
   cd $pkgname-$pkgver
   make DESTDIR="$pkgdir" install
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
 }

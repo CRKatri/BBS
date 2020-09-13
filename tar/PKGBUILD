@@ -1,0 +1,38 @@
+# Mainainer: Sébastien "Seblu" Luttringer <seblu@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: Andreas Radke <andyrtr@archlinux.org>
+
+pkgname=tar
+pkgver=1.32
+pkgrel=1
+pkgdesc='Utility used to store, backup, and transport files'
+arch=('arm64')
+url='https://www.gnu.org/software/tar/'
+license=('GPL3')
+depends=('bzip2' 'gzip' 'xz' 'zstd')
+options=('!emptydirs')
+validpgpkeys=('325F650C4C2B6AD58807327A3602B07F55D0C732') # Sergey Poznyakoff
+source=("https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig})
+md5sums=('83e38700a80a26e30b2df054e69956e5'
+         'SKIP')
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-nls
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  mkdir -p $pkgdir/bin
+  ln -s /usr/bin/tar $pkgdir/bin/tar
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+# vim:set ts=2 sw=2 et:

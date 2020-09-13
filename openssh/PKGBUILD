@@ -1,0 +1,58 @@
+# Maintainer: Gaetan Bisson <bisson@archlinux.org>
+# Contributor: Aaron Griffin <aaron@archlinux.org>
+# Contributor: judd <jvinet@zeroflux.org>
+
+pkgname=openssh
+pkgver=8.3p1
+pkgrel=1
+pkgdesc='Premier connectivity tool for remote login with the SSH protocol'
+url='https://www.openssh.com/portable.html'
+license=('custom:BSD')
+arch=('arm64')
+depends=('openssl')
+validpgpkeys=('59C2118ED206D927E667EBE3D3E5F56B6D920D30')
+source=("https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgname}-${pkgver}.tar.gz"{,.asc}
+        'ios.diff'
+        'com.openssh.sshd.plist'
+        'sshd-keygen-wrapper')
+sha256sums=('f2befbe0472fe7eb75d23340eb17531cb6b3aac24075e2066b41f814e12387b2'
+            'SKIP'
+            'e2a12118eab1e904ad7ba707f6523c00b7f1743fe1c6cdfe005dceef396c2a62'
+            '453af0c6a49da49c0a2458874085468cf03420b3d080bda01cde18099e868075'
+            '3b20402705a433b40486bd700268b1a5daa2359fe2abbae3ea16f3708bc3d060')
+
+backup=('etc/ssh/ssh_config' 'etc/ssh/sshd_config')
+
+prepare() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+
+	patch -p1 -i ../ios.diff
+	autoreconf
+  sed -i '/HAVE_ENDIAN_H/d' config.h.in
+}
+
+build() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+
+	./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc/ssh \
+    --host=${GNU_HOST_TRIPLE} \
+    --disable-strip
+
+	make
+}
+
+package() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+  mkdir -p $pkgdir/Library/LaunchDaemons $pkgdir/usr/libexec
+
+  make DESTDIR="${pkgdir}" install
+  cp ${BUILDDIR}/com.openssh.sshd.plist $pkgdir/Library/LaunchDaemons
+  cp ${BUILDDIR}/sshd-keygen-wrapper $pkgdir/usr/libexec
+
+	install -Dm644 LICENCE "${pkgdir}/usr/share/licenses/${pkgname}/LICENCE"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}

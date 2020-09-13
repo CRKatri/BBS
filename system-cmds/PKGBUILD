@@ -1,0 +1,98 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=system-cmds
+_pkgname=system_cmds
+pkgver=854.40.2
+pkgrel=1
+pkgdesc="iostat, login, passwd, sync, sysctl"
+arch=(arm64)
+license=(Unlicense)
+source=("https://opensource.apple.com/tarballs/system_cmds/system_cmds-$pkgver.tar.gz"
+        "https://opensource.apple.com/source/launchd/launchd-328/launchd/src/reboot2.h"
+        "https://opensource.apple.com/source/launchd/launchd-328/launchd/src/bootstrap_priv.h"
+        "https://opensource.apple.com/source/xnu/xnu-6153.61.1/libsyscall/wrappers/spawn/spawn.h"
+        "https://raw.githubusercontent.com/coolstar/freebsd-ports-ios/master/lib/libutil/libutil.h"
+        "https://raw.githubusercontent.com/coolstar/freebsd-ports-ios/master/lib/libutil/pw_util.c"
+        "https://raw.githubusercontent.com/coolstar/freebsd-ports-ios/master/lib/libutil/flopen.c"
+        "https://raw.githubusercontent.com/coolstar/freebsd-ports-ios/master/lib/libc/gen/pw_scan."{c,h}
+        "https://raw.githubusercontent.com/coolstar/freebsd-ports-ios/master/usr.bin/chpass/"{chpass{.h,.c},edit.c,field.c,table.c,util.c}
+        "ios.diff")
+
+prepare() {
+  cd $_pkgname-$pkgver
+  patch -p1 -i ../ios.diff
+  mkdir -p include/{IOKit,mach,sys}
+  cp -a ${MACOSX_SYSROOT}/usr/include/{libkern,net,servers,xpc} include/
+  cp -a ${MACOSX_SYSROOT}/usr/include/{lib{c,proc},NSSystemDirectories,bootstrap,tzfile}.h include/
+  cp -a ${MACOSX_SYSROOT}/usr/include/{libkern,net,servers,xpc} include/
+  cp -a ${MACOSX_SYSROOT}/usr/include/sys/{reboot,proc*,kern_control}.h include/sys
+  cp -a ${MACOSX_SYSROOT}/System/Library/Frameworks/IOKit.framework/Headers/* include/IOKit
+  cp -a ${BBS_BASE}/usr/include/{unistd,stdlib}.h include
+  cp -a ${BBS_BASE}/usr/include/mach/{task,mach_host}.h include/mach
+  cp -a ${srcdir}/{reboot2,bootstrap_priv,spawn}.h include
+  rm -rf chpass.tproj
+  mkdir -p chpass.tproj
+  cp -a ${srcdir}/{{libutil,pw_scan,chpass}.h,{pw_util,flopen,pw_scan,chpass,edit,field,table,util}.c} chpass.tproj
+}
+
+build() {
+  cd $_pkgname-$pkgver
+  for gperf in getconf.tproj/*.gperf; do
+    LC_ALL=C awk -f getconf.tproj/fake-gperf.awk < $gperf > getconf.tproj/$(basename $gperf .gperf).c
+  done
+
+  rm passwd.tproj/od_passwd.c
+  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -std=c89 -o passwd passwd.tproj/*.c -isystem include
+  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o dmesg dmesg.tproj/*.c -isystem include
+  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o sysctl sysctl.tproj/sysctl.c -isystem include
+  ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o arch arch.tproj/*.c -isystem include -framework CoreFoundation -framework Foundation -lobjc
+
+  for tproj in ac accton chpass dynamic_pager getconf getty hostinfo iostat login mkfile pwd_mkdb reboot sync vifs vipw zdump zic nologin; do
+    CFLAGS=""
+    EXTRA=""
+    case ${tproj} in
+      chpass) CFLAGS="-Ichpass.tproj";;
+      dynamic_pager) CFLAGS="-Idynamic_pager.tproj";;
+      pwd_mkdb) CFLAGS="-D_PW_NAME_LEN=MAXLOGNAME -D_PW_YPTOKEN=\"__YP!\"";;
+    esac
+    echo $tproj
+    ${CC} ${ARCH} -isysroot ${TARGET_SYSROOT} ${PLATFORM_VERSION_MIN} -o ${tproj} ${tproj}.tproj/*.c -isystem include -D'__FBSDID(x)=' -F${BBS_BASE}/System/Library/Frameworks -framework CoreFoundation -framework IOKit ${CFLAGS}
+  done
+}
+
+package() {
+  cd $_pkgname-$pkgver
+  mkdir -p $pkgdir/{bin,sbin,usr/bin,usr/sbin}
+  cp -a reboot login $pkgdir/usr/sbin
+  cp -a pagesize.tproj/pagesize.sh $pkgdir/usr/bin/pagesize
+  cp -a sync $pkgdir/bin
+  cp -a dmesg dynamic_pager $pkgdir/sbin
+  ln -sf ../usr/sbin/reboot $pkgdir/sbin/halt
+  cp -a arch chpass getconf getty hostinfo login passwd $pkgdir/usr/bin
+  ln -sf chpass $pkgdir/usr/bin/chfn
+  ln -sf chpass $pkgdir/usr/bin/chsh
+  cp -a ac accton iostat mkfile pwd_mkdb sysctl vifs vipw zdump zic $pkgdir/usr/sbin
+
+  chmod u+s $pkgdir/usr/bin/{passwd,login}
+  chmod a+x $pkgdir/usr/bin/pagesize
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+md5sums=('4f354e3867bbd82b1ab0cbc54f1ac63f'
+         'c5c464546ef154c20c091f1b72b092a5'
+         '2924c496cb880757747860aeaa69b348'
+         '8f471ed726e71fab58fa7322af390c21'
+         '53584e5ec193d071647c600bb9294270'
+         '6ec324a7902fdc39d7a93c7edf9662ab'
+         'b4fd9f9cc1d2d952354d6f927d9c0ec5'
+         '8ae4a61dad4a9c1a051696e9ac0ce7ef'
+         '59892da018d793180f746c7b8bf08e91'
+         '93c420a403c556bbc2ad6dfe794d6417'
+         '5558d2621d53eb7a4c1e94ce1ebaa8d4'
+         'd43662c6451d537a7e39117f7abeff23'
+         '9533e827c2055d726cf26b406ee742fb'
+         'd7c7ebb3a1190ad227dd3d2ce53b03e3'
+         '2b4fe6a25fd35628607c0bd900f709c4'
+         'e82df882a662137f3333f6170639f556')

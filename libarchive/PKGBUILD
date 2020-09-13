@@ -1,0 +1,43 @@
+# Maintainer: Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Maintainer: Dan McGee <dan@archlinux.org>
+
+pkgname=libarchive
+pkgver=3.4.3
+pkgrel=1
+pkgdesc='Multi-format archive and compression library'
+arch=('arm64')
+url='https://libarchive.org/'
+license=('BSD')
+depends=('bzip2' 'lz4' 'nettle' 'openssl' 'xz' 'zstd')
+validpgpkeys=('A5A45B12AD92D964B89EEE2DEC560C81CEC2276E') # Martin Matuska <mm@FreeBSD.org>
+source=("https://github.com/${pkgname}/${pkgname}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz"{,.asc})
+sha256sums=('0bfc3fd40491768a88af8d9b86bf04a9e95b6d41a94f9292dbc0ec342288c05f'
+            'SKIP')
+
+build() {
+  cd $pkgname-$pkgver 
+
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --disable-dependency-tracking \
+    --with-nettle \
+    --with-lzo2 \
+    --enable-bsdtar=shared \
+    --enable-bsdcpio=shared \
+    --enable-bsdcat=shared
+
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/libarchive/COPYING"
+  rm ${pkgdir}/usr/lib/libarchive.dylib
+  rm ${BBS_BASE}/usr/lib/libarchive.dylib
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}

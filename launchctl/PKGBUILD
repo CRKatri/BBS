@@ -1,0 +1,20 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=launchctl
+pkgver=23
+pkgrel=2
+pkgdesc="Tells launchd what to do"
+arch=(arm64)
+license=('Unknown')
+source=('launchctl' 'launchctl.xml')
+md5sums=('4c10e5eb3473ba81f3786cba220fd440'
+         '0a44a9fe44bb65f90518f71872a60b13')
+
+package() {
+  mkdir -p $pkgdir/{usr,}/bin
+  cp -a ${BUILDDIR}/launchctl $pkgdir/usr/bin
+  ln -s /usr/bin/launchctl $pkgdir/bin/launchctl
+
+  find $pkgdir -type f -exec ldid -S${BUILDDIR}/launchctl.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
