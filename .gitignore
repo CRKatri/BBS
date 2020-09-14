@@ -3,10 +3,9 @@ BBS_OUT
 *.tar*
 */pkg
 */src
-diskdev-cmds/disklabel-machine.h
-diskdev-cmds/disklabel.h
-diskdev-cmds/fsctl.h
-diskdev-cmds/mntopts.h
-diskdev-cmds/namespace.h
-diskdev-cmds/nlist.h
-diskdev-cmds/vnode.h
+diskdev-cmds/*.h
+system-cmds/*.h
+system-cmds/*.c
+coreutils/*.h
+coreutils/*.c
+uikittools/uikittools-ng
