@@ -1,0 +1,24 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=ldid
+pkgver=2.1.2
+pkgrel=1
+pkgdesc="pseudo-codesign Mach-O files"
+depends=('libplist' 'openssl')
+arch=(arm64)
+source=("$pkgname-$pkgver::https://github.com/Diatrus/saurik-ldid/archive/v$pkgver.tar.gz")
+
+build() {
+  cd saurik-$pkgname-$pkgver
+  mkdir out
+  ${CC} -c ${CFLAGS} ${LDFLAGS} -o lookup2.o lookup2.c -I.
+  ${CXX} ${CXXFLAGS} ${LDFLAGS} -std=c++11 -o out/ldid lookup2.o ldid.cpp -I. -framework CoreFoundation -framework Security -lcrypto -lplist-2.0 -lxml2
+}
+
+package() {
+  cd saurik-$pkgname-$pkgver
+  mkdir -p $pkgdir/usr/bin
+  cp out/ldid $pkgdir/usr/bin
+  ln -s ldid $pkgdir/usr/bin/ldid2
+}
+md5sums=('d9a87ce733f7bab937d62e4608d8bbf0')

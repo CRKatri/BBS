@@ -39,7 +39,4 @@ package() {
       cp $bin $pkgdir/usr/bin
     fi
   done
-
-  find $pkgdir -type f -exec ldid -S$srcdir/snaputil.xml {} \; &> /dev/null
-  find $pkgdir -name '.ldid*' -type f -delete
 }

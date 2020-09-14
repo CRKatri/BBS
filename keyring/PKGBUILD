@@ -1,0 +1,14 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=cameronkatri-keyring
+pkgver=2020.09.14
+pkgrel=1
+pkgdesc="Cameron Katri's PGP Key"
+arch=(any)
+source=('cameronkatri.gpg')
+
+package() {
+  mkdir -p $pkgdir/usr/share/pacman/keyrings
+  cp ${BUILDDIR}/cameronkatri.gpg $pkgdir/usr/share/pacman/keyrings
+}
+md5sums=('a2b5415805bc688273f4ba9f1ab0debd')

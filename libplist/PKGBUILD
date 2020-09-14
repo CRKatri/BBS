@@ -1,0 +1,31 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=libplist
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Library for handling Apple binary and XML property lists"
+arch=(arm64)
+source=("$pkgname-$pkgver::https://github.com/libimobiledevice/libplist/archive/$pkgver.tar.gz")
+
+prepare() {
+  cd $pkgname-$pkgver
+  ./autogen.sh \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --without-cython
+}
+
+build() {
+  cd $pkgname-$pkgver
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make install DESTDIR="$pkgdir"
+  make install DESTDIR="${BBS_BASE}"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+md5sums=('46b0948c0c673778aefd16dc99b4d3f9')

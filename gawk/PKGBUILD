@@ -1,0 +1,32 @@
+# Maintainer:
+# Contributor: Tom Newsom <Jeepster@gmx.co.uk>
+
+pkgname=gawk
+pkgver=5.1.0
+pkgrel=1
+pkgdesc="GNU version of awk"
+arch=('arm64')
+url="https://www.gnu.org/software/gawk/"
+license=('GPL')
+groups=('base-devel')
+depends=('sh')
+provides=('awk')
+source=(https://ftp.gnu.org/pub/gnu/${pkgname}/${pkgname}-${pkgver}.tar.gz{,.sig})
+md5sums=('f719bc9966df28e67fc6ebc405e7ea03'
+         'SKIP')
+validpgpkeys=('D1967C63788713177D861ED7DF597815937EC0D2') # Arnold Robbins
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure --prefix=/usr --libexecdir=/usr/lib --sysconfdir=/private/etc --host=${GNU_HOST_TRIPLE}
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+  rm -f $pkgdir/usr/bin/gawk-*
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null        
+  find $pkgdir -name '.ldid*' -type f -delete
+}
