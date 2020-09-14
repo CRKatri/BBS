@@ -1,0 +1,61 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Contributor: Thomas Dziedzic <gostrc@gmail.com>
+# Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
+# Contributor: tobias [ tobias at archlinux org ]
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributor: Christian Hesse <mail@eworm.de>
+# Contributor: Eli Schwartz <eschwartz@archlinux.org>
+
+pkgname=vim
+pkgver=8.2.1634
+_versiondir=82
+pkgrel=1
+pkgdesc='Vi Improved, a highly configurable, improved version of the vi text editor'
+url='https://www.vim.org'
+arch=('arm64')
+license=('custom:vim')
+depends=('ncurses' 'gettext')
+provides=('xxd')
+source=(https://github.com/vim/vim/archive/v${pkgver}/${pkgname}-${pkgver}.tar.gz)
+sha256sums=('6c855313a922bde707afa0fc98b3a705484fefb1354b0fd93a91b5a6b3cac404')
+
+prepare() {
+  cd vim-${pkgver}
+
+  sed -i 's/AC_TRY_LINK(\[]/AC_TRY_LINK(\[#include <termcap.h>]/g' src/configure.ac
+  cd src
+  autoconf -f
+}
+
+build() {
+  cd vim-${pkgver}
+  ./configure \
+    --host=${GNU_HOST_TRIPLE} \
+    --prefix=/usr \
+    --enable-gui=no \
+    --with-tlib=ncursesw \
+    --without-x \
+    --disable-darwin \
+    vim_cv_toupper_broken=no \
+    vim_cv_terminfo=yes \
+    vim_cv_tgetent=zero \
+    vim_cv_tty_group=4 \
+    vim_cv_tty_mode=0620 \
+    vim_cv_getcwd_broken=no \
+    vim_cv_stat_ignores_slash=no \
+    vim_cv_memmove_handles_overlap=yes
+  make
+}
+
+package() {
+  cd vim-${pkgver}
+  make install DESTDIR=${pkgdir}
+
+  rm $pkgdir/usr/bin/{ex,rview,rvim,view,vimdiff}
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}
+
+# vim: ts=2 sw=2 et:

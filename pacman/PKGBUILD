@@ -23,7 +23,7 @@ source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig
 sha256sums=('bb201a9f2fb53c28d011f661d50028efce6eef2c1d2a36728bdd0130189349a0'
             'SKIP'
             '0245a73097b4c07e967246d3c9da502e46df216f9029e3f43cefa5459f9550ab'
-            '2e66b637d9ef4eb07876b4bbe247a4ffcc5b7703d0621a5e2c69e0ffee15d03c'
+            'fafc24f6798d1d96eb0b658259b5b0e2769fedf9c3fba5030e2a1a4d563764cf'
             '6070e489c9fcf28b0a4e785351c5f376d1a22e24728466f6d476e5570cfa947a')
 
 prepare() {
@@ -40,7 +40,8 @@ build() {
     --sysconfdir=/etc \
     --disable-dependency-tracking \
     --disable-doc \
-    --with-scriptlet-shell=/usr/bin/bash
+    --with-scriptlet-shell=/usr/bin/bash \
+    --localstatedir=/private/var
   make V=1
 }
 
@@ -54,6 +55,12 @@ package() {
   install -dm755 "$pkgdir/etc"
   install -m644 "$srcdir/pacman.conf" "$pkgdir/etc"
   install -m644 "$srcdir/makepkg.conf" "$pkgdir/etc"
+
+  aarch64-apple-darwin-install_name_tool -change /usr/lib/libarchive.2.dylib /usr/lib/libarchive.13.dylib $pkgdir/usr/bin/pacman
+  aarch64-apple-darwin-install_name_tool -change /usr/lib/libarchive.2.dylib /usr/lib/libarchive.13.dylib $pkgdir/usr/bin/pacman-conf
+  aarch64-apple-darwin-install_name_tool -change /usr/lib/libarchive.2.dylib /usr/lib/libarchive.13.dylib $pkgdir/usr/bin/testpkg
+  aarch64-apple-darwin-install_name_tool -change /usr/lib/libarchive.2.dylib /usr/lib/libarchive.13.dylib $pkgdir/usr/bin/vercmp
+  aarch64-apple-darwin-install_name_tool -change /usr/lib/libarchive.2.dylib /usr/lib/libarchive.13.dylib $pkgdir/usr/lib/libalpm.12.dylib
 
   find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
   find $pkgdir -name '.ldid*' -type f -delete

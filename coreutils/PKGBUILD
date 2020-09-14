@@ -13,7 +13,8 @@ source=("https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz"{,.sig}
         "https://raw.githubusercontent.com/coolstar/netbsd-ports-ios/trunk/usr.bin/su/suutil."{c,h}
         "https://opensource.apple.com/source/text_cmds/text_cmds-88/rev/rev.c"
         "https://opensource.apple.com/source/file_cmds/file_cmds-272.250.1/cp/"{{cp,utils}.c,extern.h}
-        "https://opensource.apple.com/source/Libc/Libc-1353.41.1/gen/get_compat.h")
+        "https://opensource.apple.com/source/Libc/Libc-1353.41.1/gen/get_compat.h"
+        "coreutils.sh")
 validpgpkeys=('6C37DC12121A5006BC1DB804DF6FD971306037D9') # Pádraig Brady
 sha256sums=('4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa'
             'SKIP'
@@ -24,7 +25,8 @@ sha256sums=('4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa'
             '28931f22ae3a94ff0aaf4380628d5930167cb211750bd4487c08108ec2faeabb'
             '09b31b5779125e8a39091e55949bb9b07566e82b63e3829d1086e432e7066b68'
             '74285aaab1970b6afd655e615f1fd45ac87f1f0b4a2c2f6770e125ad95815023'
-            'b2127c6e290e96bc19a87740c6b8fa43b9cf8585f49aac07b401712b41538929')
+            'b2127c6e290e96bc19a87740c6b8fa43b9cf8585f49aac07b401712b41538929'
+            '9dc4c8dcfc197491e26ec123deb4df6290f9e5a447570e7da738ec8239f81cc1')
 
 prepare() {
   cd $pkgname-$pkgver
@@ -56,7 +58,7 @@ package() {
   ln -s /usr/bin/chown $pkgdir/bin
   ln -s /usr/bin/chroot $pkgdir/usr/sbin
   ln -s /usr/bin/{cat,chgrp,cp,date,dd,dir,echo,false,kill,ln,ls,mkdir,mknod,mktemp,mv,pwd,readlink,rm,rmdir,sleep,stty,su,touch,true,uname,vdir} $pkgdir/bin
-  cp ${BBS_EXTRA}/coreutils.sh $pkgdir/etc/profile.d
+  cp ${BUILDDIR}/coreutils.sh $pkgdir/etc/profile.d
   chmod u+s $pkgdir/usr/bin/su
 
   find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null
