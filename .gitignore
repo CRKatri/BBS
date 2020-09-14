@@ -11,3 +11,4 @@ coreutils/*.c
 uikittools/uikittools-ng
 ldid/ldid-2.1.2
 libplist/libplist-2.2.0
+darwintools/*.c

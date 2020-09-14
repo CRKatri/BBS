@@ -1,0 +1,34 @@
+# Maintainer: Cameron Katri
+
+pkgname='protobuf'
+pkgver=3.12.4
+pkgrel=1
+pkgdesc="Protocol Buffers - Google's data interchange format"
+arch=('arm64')
+url='https://developers.google.com/protocol-buffers/'
+license=('BSD')
+source=("https://github.com/protocolbuffers/$pkgname/releases/download/v$pkgver/$pkgname-all-$pkgver.tar.gz")
+sha512sums=('166ebf405446a811ddfd354f4268d142326b2ff87ea13dc9643c2c035f54accb0c438e6248d2a043b6485211d8b9ff1d6c8c0dfff6fd2a3eecc34217980d3fa9')
+
+prepare() {
+  cd "$pkgbase-$pkgver"
+  autoreconf -vfi
+}
+
+build() {
+  cd "$pkgbase-$pkgver"
+  ./configure --prefix=/usr --host=${GNU_HOST_TRIPLE}
+  make
+}
+
+package() {
+  cd "$pkgbase-$pkgver"
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -vDm 644 editors/protobuf-mode.el \
+    -t "$pkgdir/usr/share/emacs/site-lisp/"
+  install -vDm 644 editors/proto.vim \
+    -t "${pkgdir}/usr/share/vim/vimfiles/syntax"
+}

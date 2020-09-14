@@ -1,0 +1,24 @@
+# Maintainer: Cameron Katri
+
+pkgname=darwintools
+pkgver=1.0
+pkgrel=1
+pkgdesc="sw_vers"
+arch=(arm64)
+license=('GPL')
+source=('https://raw.githubusercontent.com/ProcursusTeam/Procursus/master/darwintools/sw_vers.c')
+md5sums=('fba1554c037a080d5ab8558d08cd80c6')
+
+
+build() {
+  ${CC} ${CFLAGS} sw_vers.c -o sw_vers -framework CoreFoundation -O3
+  ${STRIP} sw_vers
+}
+
+package() {
+  mkdir -p $pkgdir/usr/bin
+  cp ${srcdir}/sw_vers $pkgdir/usr/bin
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}
