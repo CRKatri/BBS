@@ -1,0 +1,45 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=uikittools
+_pkgname=uikittools-ng
+pkgver=r33.373c012
+pkgrel=1
+pkgdesc="Command line access for UIKit/LaunchServices/CoreServices"
+arch=(arm64)
+depends=('coreutils' 'findutils')
+source=("git+https://github.com/Diatrus/uikittools-ng")
+md5sums=('SKIP')
+
+pkgver() {
+  cd $_pkgname
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+  cd $_pkgname
+  rm launch.h
+  ln -s ${MACOSX_SYSROOT}/usr/include/launch.h launch.h
+  rm xpc
+  ln -s ${MACOSX_SYSROOT}/usr/include/xpc xpc
+}
+
+build() {
+  cd $_pkgname
+  make \
+    CC=${CC} \
+    STRIP=${STRIP} \
+    CFLAGS="${CFLAGS}"
+}
+
+package() {
+  cd $_pkgname
+  mkdir -p $pkgdir/usr/bin
+  for bin in *; do
+    if [ -f ${bin} ] && [ -x ${bin} ]; then
+      cp $bin $pkgdir/usr/bin
+    fi
+  done
+
+  find $pkgdir -type f -exec ldid -S$srcdir/snaputil.xml {} \; &> /dev/null
+  find $pkgdir -name '.ldid*' -type f -delete
+}
