@@ -1,0 +1,14 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=mterminal
+pkgver=1.5
+pkgrel=2
+pkgdesc="A MobileTerminal fork"
+arch=(arm64)
+depends=('coreutils' 'gettext-localizations' 'system-cmds' 'zsh')
+source=("https://github.com/ProcursusTeam/MTerminal/releases/download/${pkgver}-${pkgrel}/${pkgname}_${pkgver}-${pkgrel}_iphoneos-arm.deb")
+
+package() {
+  tar xf data.tar.xz -C $pkgdir
+}
+md5sums=('60f0f17457459b6591010c20cee1f29a')

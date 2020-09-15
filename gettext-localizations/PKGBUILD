@@ -1,0 +1,16 @@
+# Maintainer: Cameron Katri <katri.cameron@gmail.com>
+
+pkgname=gettext-localizations
+pkgver=2020.07.27
+pkgrel=1
+pkgdesc="Locale files necessary for command line tool translation."
+arch=(arm64)
+source=("https://apt.procurs.us/pool/main/iphoneos-arm64/1600/gettext-localizations_${pkgver}_iphoneos-arm.deb")
+depends=('gettext')
+
+package() {
+  tar xf data.tar.xz -C $pkgdir
+
+  rm $pkgdir/usr/share/locale/{UTF-8/LC_CTYPE,pt_BR/LC_TIME,zh_CN/LC_TIME,zh_TW/LC_TIME}
+}
+md5sums=('325cefe56a8e2c3ad60633e177d8e031')

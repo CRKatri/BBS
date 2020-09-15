@@ -1,0 +1,52 @@
+# Maintainer:  Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: Jochem Kossen <j.kossen@home.nl>
+
+pkgname=fakeroot
+pkgver=1.24
+pkgrel=1
+pkgdesc='Tool for simulating superuser privileges'
+arch=(arm64)
+license=(GPL)
+url='https://tracker.debian.org/pkg/fakeroot'
+source=("https://deb.debian.org/debian/pool/main/f/$pkgname/${pkgname}_${pkgver}.orig.tar.gz")
+sha256sums=('2e045b3160370b8ab4d44d1f8d267e5d1d555f1bb522d650e7167b09477266ed')
+
+prepare() {
+  cd $pkgname-$pkgver
+  for file in {communicate.{c,h},faked.c,libfakeroot{,_unix2003}.c,wrapfunc.inp}; do
+    sed -i 's/struct stat64/struct stat/g' ${file}
+    sed -i '/_DARWIN_NO_64_BIT_INODE/d' ${file} 
+    sed -i 's/int who/id_t who/g' ${file}
+  done
+  sed -i '/INT_STRUCT_STAT struct stat/d' libfakeroot_unix2003.c
+  sed -i '/$$INODE64/d' wrapfunc.inp
+  sed -i 's/libmacosx.la $$(LTLIBOBJS)/$$(LTLIBOBJS)/g'  Makefile.in
+}
+
+build() {
+  cd $pkgname-$pkgver
+
+  ./configure --prefix=/usr \
+    --host=${GNU_HOST_TRIPLE} \
+    --with-ipc=tcp \
+    ac_cv_func_openat=no
+
+  sed -i 's/SETGROUPS_SIZE_TYPE unknown/SETGROUPS_SIZE_TYPE int/g' config.h
+  make CFLAGS="${CFLAGS} -D__DARWIN_UNIX03 -DMAC_OS_X_VERSION_MIN_REQUIRED=1000"
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="${BBS_BASE}" install
+
+  install -dm755 "$pkgdir/etc/ld.so.conf.d/"
+  echo '/usr/lib/libfakeroot' > "$pkgdir/etc/ld.so.conf.d/fakeroot.conf"
+
+  # install README for sysv/tcp usage
+  install -Dm644 README "$pkgdir/usr/share/doc/$pkgname/README"
+
+  find $pkgdir -type f -exec ldid -S${BBS_EXTRA}/general.xml {} \; &> /dev/null    
+  find $pkgdir -name '.ldid*' -type f -delete
+}
