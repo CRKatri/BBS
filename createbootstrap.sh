@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 rm bootstrap.tar
+rm -rf root
 mkdir root
 mkdir -m 0755 -p root/var/{cache/pacman/pkg,lib/pacman,log} root/{dev,run,private/etc/pacman.d}
 for pkgnames in $(cat BBS_EXTRA/boostrappkgs); do
@@ -19,11 +20,11 @@ fakeroot mv root/private/etc/profile.d/* root/etc/profile.d/
 fakeroot mv root/private/etc/pacman.d root/etc/
 fakeroot rm -rf root/private/etc
 fakeroot mv root/etc root/private
-fakeroot mv root/private/var/cache/pacman root/var/cache
-fakeroot mv root/private/var/lib/pacman/local/ root/var/lib/pacman
 fakeroot rm -rf root/private/var
 fakeroot mv root/var root/private/
 cd root
 fakeroot tar cf ../bootstrap.tar .
 cd ..
+zstd -9 bootstrap.tar
+rm bootstrap.tar
 rm -rf root

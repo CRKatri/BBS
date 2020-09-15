@@ -29,7 +29,9 @@ echo 'touch /.bootstrapped' >> device.sh
 echo 'rm bootstrap.tar' >> device.sh
 echo 'rm device.sh' >> device.sh
 
+zstd -d bootstrap.tar.zst
 scp -P4444 -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" bootstrap.tar device.sh root@127.0.0.1:/var/root/
 ssh -p4444 -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" root@127.0.0.1 "bash /var/root/device.sh"
+rm device.sh bootstrap.tar
 
 killall iproxy

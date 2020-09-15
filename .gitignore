@@ -1,6 +1,7 @@
 BBS_BASE
 BBS_OUT
 *.tar*
+!bootstrap.tar.zst
 */pkg
 */src
 diskdev-cmds/*.h
@@ -13,3 +14,4 @@ ldid/ldid-2.1.2
 libplist/libplist-2.2.0
 darwintools/*.c
 device.sh
+*.deb

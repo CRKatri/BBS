@@ -27,6 +27,7 @@ libssh2
 libunistring
 lz4
 lzo
+mterminal
 ncurses
 nettle
 nghttp2
