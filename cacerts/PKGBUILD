@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc="CA certs for curl, wget, git."
 arch=(any)
 license=(Unlicense)
-source=('mk-ca-bundle.pl')
+source=('https://raw.githubusercontent.com/curl/curl/master/lib/mk-ca-bundle.pl')
 sha256sums=('0b556ed71190a6086630351967b401395a0dd0fa769faf1d0f28e17f0de7eec1')
 
 build() {
