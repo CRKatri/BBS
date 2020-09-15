@@ -24,6 +24,9 @@ echo 'rm /etc/pwd.db /etc/spwd.db' >> device.sh
 echo 'pacman-key --init' >> device.sh
 echo 'pacman-key --populate' >> device.sh
 echo 'echo 7D3B36CEA40FCC2181FB6DCDBAFFD97826540F1C:6: | gpg --homedir /etc/pacman.d/gnupg/ --import-ownertrust' >> device.sh
+echo 'cp -af /User/* /var/mobile' >> device.sh
+echo 'rm -rf /User' >> device.sh
+echo 'ln -s /var/mobile /User' >> device.sh
 echo 'touch /.mount_rw' >> device.sh
 echo 'touch /.bootstrapped' >> device.sh
 echo 'rm bootstrap.tar' >> device.sh
